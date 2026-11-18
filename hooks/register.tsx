@@ -1,13 +1,16 @@
 import type { EngineInterface as Engine, Register, ThemeColor, ThemeSetArgs } from 'claude-code'
 
 import { makeColors } from './make-colors.js'
-import { METRO, MONSOON, NAVY, SILICON, TET } from './palettes'
+import { DAWN, EXAM, METRO, MONSOON, NAVY, SILICON, TET, TRUNGTHU } from './palettes'
 import { previewPage } from './preview'
+import { SCENE as DAWN_SCENE } from './scenes/dawn'
+import { SCENE as EXAM_SCENE } from './scenes/exam'
 import { SCENE as METRO_SCENE } from './scenes/metro'
 import { SCENE as MONSOON_SCENE } from './scenes/monsoon'
 import { SCENE as NAVY_SCENE } from './scenes/navy'
 import { SCENE as SILICON_SCENE } from './scenes/silicon'
 import { SCENE as TET_SCENE } from './scenes/tet'
+import { SCENE as TRUNGTHU_SCENE } from './scenes/trungthu'
 
 type Palette = Parameters<typeof makeColors>[0]
 
@@ -16,6 +19,7 @@ interface Theme {
   title: string
   blurb: string
   palette: Palette
+  scheme?: 'light' | 'dark'
   /** Glass over an animated scene; absent for a still or plain look. */
   scene?: { svg: string; alt: string; tint: string; opacity: number }
   still?: string
@@ -84,6 +88,43 @@ const THEMES: readonly Theme[] = [
     },
   },
   {
+    id: 'trungthu',
+    title: 'Trung Thu',
+    blurb: 'Mid-Autumn on campus: full moon, star lanterns, a lion dance, mooncakes',
+    palette: TRUNGTHU,
+    scene: {
+      svg: TRUNGTHU_SCENE,
+      alt: 'A pixel-art Mid-Autumn night on campus, with a full moon, star lanterns, children in a lantern parade, a lion dance and mooncakes',
+      tint: '#0b0a20',
+      opacity: 0.72,
+    },
+  },
+  {
+    id: 'exam',
+    title: 'Exam Night',
+    blurb: 'The library at 2 AM in exam season: desk lamps, rain on the window, a phin of coffee',
+    palette: EXAM,
+    scene: {
+      svg: EXAM_SCENE,
+      alt: 'A pixel-art library late at night, with bookshelves, green desk lamps, a wall clock, rain on a tall window and a Vietnamese iced coffee dripping',
+      tint: '#100b07',
+      opacity: 0.74,
+    },
+  },
+  {
+    id: 'dawn',
+    title: 'Campus Dawn',
+    blurb: 'Sunrise over the lake by the dorms, mist, birds, bikes on the lakeside road (light)',
+    palette: DAWN,
+    scheme: 'light',
+    scene: {
+      svg: DAWN_SCENE,
+      alt: 'A pixel-art sunrise over a lake, with dormitory blocks, a campus tower, mist on the water, birds and cyclists on a road',
+      tint: '#f4efe6',
+      opacity: 0.7,
+    },
+  },
+  {
     id: 'still',
     title: 'Navy Still',
     blurb: 'The navy campus as a still picture',
@@ -99,7 +140,7 @@ const THEMES: readonly Theme[] = [
   },
 ]
 
-const ALIASES: Record<string, string> = { scene: 'navy', 'tet-bloom': 'tet', 'metro-dusk': 'metro' }
+const ALIASES: Record<string, string> = { scene: 'navy', 'tet-bloom': 'tet', 'metro-dusk': 'metro', 'trung-thu': 'trungthu', 'mid-autumn': 'trungthu', 'exam-night': 'exam', 'campus-dawn': 'dawn' }
 const STORE_KEY = 'theme'
 const LEGACY_KEY = 'variant'
 const PLUGIN = 'uit-theme'
@@ -110,7 +151,7 @@ const COLORS = new Map(THEMES.map(theme => [theme.id, makeColors(theme.palette)]
 const findTheme = (word: string) => THEMES.find(theme => theme.id === (ALIASES[word] ?? word))
 
 const lookFor = (theme: Theme): ThemeSetArgs => {
-  const base = { colors: COLORS.get(theme.id)!.theme, overrideColorScheme: 'dark' } as const
+  const base = { colors: COLORS.get(theme.id)!.theme, overrideColorScheme: theme.scheme ?? 'dark' } as const
 
   if (theme.scene) {
     return {
@@ -126,10 +167,10 @@ const lookFor = (theme: Theme): ThemeSetArgs => {
 }
 
 const listing = (current: string) =>
-  THEMES.map(theme => `${theme.id === current ? '>' : ' '} ${theme.id.padEnd(8)} ${theme.title}: ${theme.blurb}`).join('\n')
+  THEMES.map(theme => `${theme.id === current ? '>' : ' '} ${theme.id.padEnd(9)} ${theme.title}: ${theme.blurb}`).join('\n')
 
 const USAGE = [
-  '/uit <theme>       switch theme (navy, monsoon, metro, silicon, tet, still, plain)',
+  '/uit <theme>       switch theme (navy, monsoon, metro, silicon, tet, trungthu, exam, dawn, still, plain)',
   '/uit next          cycle to the next theme',
   '/uit list          list themes',
   '/uit off           back to the default look',
@@ -175,7 +216,7 @@ async function startPreview($: Engine, current: string): Promise<string> {
         id: theme.id,
         title: theme.title,
         blurb: theme.blurb,
-        anchors: theme.palette.dark!.gray!.anchors as Record<string, string>,
+        anchors: (theme.palette.dark ?? theme.palette.light)!.gray!.anchors as Record<string, string>,
         roles: theme.palette.roles as Record<string, string>,
         tint: theme.scene?.tint ?? '#04102a',
         opacity: theme.scene?.opacity ?? 0.72,
@@ -233,7 +274,7 @@ export const register: Register = on => {
       }
     }
 
-    await $.command.register({ name: 'uit', description: 'UIT themes: /uit <navy|monsoon|metro|silicon|tet|still|plain>, next, list, off' })
+    await $.command.register({ name: 'uit', description: 'UIT themes: /uit <navy|monsoon|metro|silicon|tet|trungthu|exam|dawn|still|plain>, next, list, off' })
     await $.command.register({ name: 'uit-preview', description: 'Open a localhost gallery of the UIT theme scenes (/uit-preview stop ends it)' })
 
     const current = await currentId($)

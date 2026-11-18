@@ -77,3 +77,45 @@ export const TET = palette(
   ['#fbeee8', '#e3cfc8', '#b99d97'],
   { added: '#62d07e', removed: '#f4708a', modified: '#f2b630', merged: '#d0a6f4' },
 )
+
+// Mid-Autumn night: moonlit indigo, lantern gold as accent.
+export const TRUNGTHU = palette(
+  'UIT Trung Thu',
+  'uit-trungthu',
+  { accent: '#f0a030', danger: '#ef4f5a', success: '#4cc38a', warning: '#f6c445', pro: '#a88cf2' },
+  ['#0b0a20', '#100e29', '#151231', '#1a163a'],
+  ['#f1eefb', '#cdc8e6', '#9d97c2'],
+  { added: '#5fd39a', removed: '#f2708a', modified: '#f6c445', merged: '#c0a6f6' },
+)
+
+// Library after midnight: walnut browns under desk-lamp amber.
+export const EXAM = palette(
+  'UIT Exam Night',
+  'uit-exam',
+  { accent: '#e8a43a', danger: '#ef6450', success: '#4fbf7a', warning: '#f2c94c', pro: '#a890f0' },
+  ['#100b07', '#16100a', '#1d150e', '#241a12'],
+  ['#f6efe4', '#d8cbb8', '#a8998a'],
+  { added: '#62d07e', removed: '#f07a68', modified: '#f2c94c', merged: '#b8a2f4' },
+)
+
+// The one light palette: sunrise cream with UIT blue.
+export const DAWN = {
+  label: 'UIT Campus Dawn',
+  id: 'uit-dawn',
+  only: 'light',
+  roles: { accent: '#2f63c8', danger: '#c8402e', success: '#2f8a4e', warning: '#b07a12', pro: '#6d4fb0' },
+  light: {
+    gray: {
+      anchors: {
+        'surface-0': '#ece6dc',
+        'surface-1': '#f3eee6',
+        'surface-2': '#faf7f1',
+        'surface-3': '#faf7f1',
+        'text-primary': '#1d2433',
+        'text-secondary': '#3c4657',
+        'text-muted': '#545e70',
+      },
+    },
+    git: { added: '#2d8a4e', removed: '#c0392b', modified: '#a86f14', merged: '#6d4f94' },
+  },
+} as const

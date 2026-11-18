@@ -13,6 +13,9 @@ Works in the Desktop and Mobile apps only for now; the terminal and VS Code draw
 | `/uit metro` | Metro Line 1 at sunset |
 | `/uit silicon` | The campus as a circuit board |
 | `/uit tet` | Lunar New Year: hoa mai, lanterns, fireworks |
+| `/uit trungthu` | Mid-Autumn: full moon, star lanterns, a lion dance |
+| `/uit exam` | The library at 2 AM in exam season |
+| `/uit dawn` | Sunrise over the lake by the dorms (light theme) |
 
 Also: `/uit still`, `/uit plain`, `/uit next`, `/uit off`, and `/uit-preview` for a local gallery (needs `python3`).
 
