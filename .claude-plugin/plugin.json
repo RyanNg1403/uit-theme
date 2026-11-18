@@ -1,0 +1,9 @@
+{
+  "name": "uit-theme",
+  "version": "0.6.0",
+  "description": "UIT themes for the University of Information Technology (VNU-HCM): five animated pixel-art scenes (Navy campus, Monsoon, Metro Dusk, Silicon, Tet Bloom) with matching dark palettes",
+  "license": "MIT",
+  "author": {
+    "name": "RyanNg1403"
+  }
+}

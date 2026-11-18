@@ -1,0 +1,15 @@
+{
+  "name": "uit-theme",
+  "owner": {
+    "name": "RyanNg1403"
+  },
+  "metadata": {
+    "description": "UIT themes for the Claude desktop app"
+  },
+  "plugins": [
+    {
+      "name": "uit-theme",
+      "source": "./"
+    }
+  ]
+}
