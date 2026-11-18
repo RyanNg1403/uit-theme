@@ -9,11 +9,9 @@ export interface PreviewTheme {
   roles: Record<string, string>
   tint: string
   opacity: number
-  kind: 'scene' | 'still' | 'plain'
-  gradient?: string[]
 }
 
-export function previewPage(input: { current: string; stillUri: string; themes: PreviewTheme[] }): string {
+export function previewPage(input: { current: string; themes: PreviewTheme[] }): string {
   const data = JSON.stringify(input).replace(/</g, '\\u003c')
 
   return `<!doctype html>
@@ -87,14 +85,12 @@ const themes = DATA.themes;
 let at = Math.max(0, themes.findIndex(t => t.id === DATA.current));
 let glassOn = true;
 const $ = id => document.getElementById(id);
-const art = (t, cls) => t.kind === 'scene' ? '<img class="' + cls + '" src="' + t.id + '.svg" alt="">'
-  : t.kind === 'still' && DATA.stillUri ? '<img class="' + cls + '" src="' + DATA.stillUri + '" alt="">'
-  : '<div class="' + (cls || 'fill') + '" style="background:linear-gradient(180deg,' + (t.gradient || [t.anchors['surface-1'], t.anchors['surface-0']]).join(',') + ')"></div>';
+const art = (t, cls) => '<img class="' + cls + '" src="' + t.id + '.svg" alt="">';
 const hexA = (hex, a) => hex + Math.round(a * 255).toString(16).padStart(2, '0');
 function show() {
   const t = themes[at], a = t.anchors, r = t.roles;
   $('stage').innerHTML = art(t, '') +
-    '<div class="glass' + (glassOn ? '' : ' hidden') + '" style="background:' + hexA(t.tint, t.kind === 'scene' ? t.opacity : 0.0) + ';color:' + a['text-primary'] + '">' +
+    '<div class="glass' + (glassOn ? '' : ' hidden') + '" style="background:' + hexA(t.tint, t.opacity) + ';color:' + a['text-primary'] + '">' +
       '<div class="msg user" style="background:' + a['surface-3'] + '">Switch to the ' + t.title + ' theme</div>' +
       '<div class="msg" style="color:' + a['text-secondary'] + '">Done. Run <code style="color:' + r.accent + '">/uit ' + t.id + '</code> any time. ' +
         '<span style="color:' + r.success + '">+12</span> <span style="color:' + r.danger + '">-3</span> <span style="color:' + r.warning + '">warn</span></div>' +
@@ -126,9 +122,8 @@ if (query.has('kiosk')) document.body.classList.add('kiosk');
 if (query.get('glass') === '0') glassOn = false;
 const play = Number(query.get('play')) || 0;
 if (play > 0) {
-  // Autoplay cycles the animated scenes only.
   setInterval(() => {
-    do { at = (at + 1) % themes.length; } while (themes[at].kind !== 'scene');
+    at = (at + 1) % themes.length;
     show();
   }, play * 1000);
 }
