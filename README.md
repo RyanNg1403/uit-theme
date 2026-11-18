@@ -21,10 +21,19 @@ Also: `/uit still`, `/uit plain`, `/uit next`, `/uit off`, and `/uit-preview` fo
 
 ## Install
 
-```
-/plugin install uit-theme --marketplace RyanNg1403/uit-theme
+In the Claude desktop app, click + next to the prompt box, then Plugins:
+
+1. Add marketplace: `RyanNg1403/uit-theme`
+2. Add plugin: `uit-theme`
+
+Then try `/uit navy`.
+
+The `/plugin` command opens a terminal-only panel, so it doesn't work in the desktop app's prompt box. To install from a terminal instead, run:
+
+```bash
+claude plugin install uit-theme --marketplace RyanNg1403/uit-theme
 ```
 
-Or click + next to the prompt box, then Plugins, Add marketplace `RyanNg1403/uit-theme`, Add plugin.
+Then send `/reload-plugins` in any desktop session that's already open.
 
 All artwork is original; no university logo is used. MIT licensed.
