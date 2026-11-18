@@ -2,6 +2,8 @@
 
 Animated pixel-art themes for the Claude desktop app, inspired by the University of Information Technology (UIT), VNU-HCM.
 
+Works in the Desktop and Mobile apps only for now; the terminal and VS Code draw no themes.
+
 ![UIT themes switching in the Code tab](docs/demo.gif)
 
 | Command | Scene |
