@@ -338,5 +338,9 @@ class Motion:
 
     def clip(self, rects: list[tuple[int, int, int, int]]) -> str:
         cid = f"c{len(self.s.defs)}"
-        self.s.defs.append(f'<clipPath id="{cid}">' + "".join(f'<rect x="{x}" y="{y}" width="{w}" height="{h}"/>' for x, y, w, h in rects) + "</clipPath>")
+        d, cx, cy = [], 0, 0
+        for x, y, w, h in rects:
+            d.append(f"{'m' if d else 'M'}{x - cx} {y - cy}h{w}v{h}h{-w}z")
+            cx, cy = x, y
+        self.s.defs.append(f'<clipPath id="{cid}"><path d="{"".join(d).replace(" -", "-")}"/></clipPath>')
         return cid

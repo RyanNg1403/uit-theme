@@ -1,8 +1,12 @@
 """Rig people placed in a scene.
 
-Each distinct (look, height, pose) is drawn once into <defs> and placed with <use>, so a
-crowd of fifty costs a handful of sprites. Frame loops step with opacity, each instance
-with its own timing, and walkers move whole pixels per step so they stay crisp.
+Each distinct (look, height, pose) is drawn once and placed with <use>, so a crowd of
+fifty costs a handful of sprites. A frame loop is split into layers by the frames each
+pixel shows in (the head that never moves is one layer, a blinking eye another), and each
+layer steps its opacity on a keyframe made for that set of frames; the loop's period and
+offset ride on CSS variables, so every instance keeps its own timing. Walkers move whole
+pixels per step so they stay crisp. Sprites no loop or <use> ends up naming are dropped
+(scenekit.prune).
 """
 
 from __future__ import annotations
@@ -15,6 +19,11 @@ from rig import DARK, Look, Pose, sprite, walk
 W = 384
 
 WALK_CSS = ".wk{animation:wk linear infinite}@keyframes wk{to{transform:translateX(var(--wd))}}"
+LOOP_CSS = ".fl>[class]{animation-duration:var(--p);animation-delay:var(--o);animation-timing-function:steps(1,end);animation-iteration-count:infinite}"
+
+# A set of frames gets its own layer when that saves more than it costs: roughly, when
+# its pixels times the extra frames that would otherwise repeat them pass this.
+LAYER_MIN = 60
 
 
 class Cast:
@@ -22,44 +31,77 @@ class Cast:
         self.m = m
         self.tag = tag
         self.ids: dict[tuple, str] = {}
-        m.s.style(WALK_CSS)
+        self.px: dict[str, dict] = {}
+        self.layers: dict[frozenset, str] = {}
+        self.count = 0
+        m.s.style(WALK_CSS, LOOP_CSS)
 
     # ------------------------------------------------------------ sprites
+
+    def _new(self) -> str:
+        self.count += 1
+        return f"{self.tag}{self.count - 1}"
 
     def sid(self, look: Look, h: int, pose: Pose, facing: int = 1, outline: bool = True, below: int | None = None) -> str:
         """`below`: drop rows from this local y down (hidden under the frame edge)."""
         key = (repr(look), h, repr(pose), facing, outline, below)
         if key not in self.ids:
-            i = f"{self.tag}{len(self.ids)}"
+            i = self._new()
             c = sprite(0, 0, h, look, pose, facing, outline)
             if below is not None:
                 c.px = {p: col for p, col in c.px.items() if p[1] < below}
             self.m.s.defs.append(f'<g id="{i}">{c.svg(clip=False)}</g>')
             self.ids[key] = i
+            self.px[i] = c.px
         return self.ids[key]
+
+    def layer(self, px: dict) -> str:
+        key = frozenset(px.items())
+        if key not in self.layers:
+            i = self._new()
+            c = Canvas()
+            c.px = dict(px)
+            self.m.s.defs.append(f'<g id="{i}">{c.svg(clip=False)}</g>')
+            self.layers[key] = i
+        return self.layers[key]
 
     def raw(self, key: str, c: Canvas) -> str:
         """A hand-drawn sprite (vehicles) kept in defs."""
         if key not in self.ids:
-            i = f"{self.tag}{len(self.ids)}"
+            i = self._new()
             self.m.s.defs.append(f'<g id="{i}">{c.svg(clip=False)}</g>')
             self.ids[key] = i
         return self.ids[key]
 
     def steps(self, ids: list[str], period: float, delay: float) -> str:
-        """Frames shown in turn, each for an equal share of the period."""
+        """Frames shown in turn, each for an equal share of the period, as layers. A
+        frame may line up with the first one shifted a pixel (the body rising on a
+        step); its layers are then drawn shifted, so the head is still shared."""
         if len(set(ids)) == 1:
             return f'<use href="#{ids[0]}"/>'
+        frames = [self.px[i] for i in ids]
+        plain = _layers(frames, [(0, 0)] * len(frames))
+        shifted = _layers(frames, _offsets(frames))
+        groups = min(plain, shifted, key=_cost)
         n = len(ids)
-        name = f"pf{n}"
-        if not any(f"@keyframes {name}{{" in r for r in self.m.s.css):
-            cut = round(100 / n, 3)
-            self.m.s.style(f".{name}{{opacity:0;animation:{name} 1s steps(1,end) infinite}}@keyframes {name}{{0%,{cut}%{{opacity:1}}{round(cut + 0.001, 3)}%,100%{{opacity:0}}}}")
+        full = (1 << n) - 1
         out = []
-        for i, sid in enumerate(ids):
-            d = round(i * period / n - period - delay % period, 3)
-            out.append(f'<g class="{name}" style="animation-duration:{period}s;animation-delay:{d}s"><use href="#{sid}"/></g>')
-        return "".join(out)
+        for (mask, (dx, dy)), px in sorted(groups.items(), key=lambda g: (g[0][0] != full, g[0])):
+            lid = self.layer(px)
+            at = (f' x="{dx}"' if dx else "") + (f' y="{dy}"' if dy else "")
+            out.append(f'<use href="#{lid}"{at}/>' if mask == full else f'<use class="{self.keyframe(n, mask)}" href="#{lid}"{at}/>')
+        return f'<g class="fl" style="--p:{period}s;--o:{-round(delay % period, 3)}s">{"".join(out)}</g>'
+
+    def keyframe(self, n: int, mask: int) -> str:
+        """Opacity 1 in the frames of `mask`, else 0. Without animation (reduced motion)
+        the first frame stays."""
+        name = f"q{n}_{mask:x}"
+        if not any(f"@keyframes {name}{{" in r for r in self.m.s.css):
+            on = [mask >> i & 1 for i in range(n)]
+            keys = [(round(100 * i / n, 3), on[i]) for i in range(n) if i == 0 or on[i] != on[i - 1]]
+            body = "".join(f"{p}%{{opacity:{v}}}" for p, v in keys[:-1]) + f"{keys[-1][0]}%,100%{{opacity:{keys[-1][1]}}}"
+            self.m.s.style(f".{name}{{animation-name:{name}{'' if on[0] else ';opacity:0'}}}@keyframes {name}{{{body}}}")
+        return name
 
     # ------------------------------------------------------------ placing
 
@@ -132,6 +174,58 @@ class Cast:
             f'<g transform="translate({x0} {feet})"><g class="wk" style="--wd:{wd}px;animation-duration:{round(dur, 1)}s;animation-delay:-{round(phase * dur, 2)}s;animation-timing-function:steps({int(dist)})">'
             f"<g{flip}>{glow}{body}</g></g></g>"
         )
+
+
+def _offsets(frames: list[dict]) -> list[tuple[int, int]]:
+    """For each frame, the shift (within a pixel) that best lines it up with the first."""
+    ref = set(frames[0].items())
+    out = []
+    for f in frames:
+        best = max(
+            ((dx, dy) for dy in (0, -1, 1) for dx in (0, -1, 1)),
+            key=lambda o: sum(((x - o[0], y - o[1]), c) in ref for (x, y), c in f.items()),
+        )
+        out.append(best)
+    return out
+
+
+def _layers(frames: list[dict], offs: list[tuple[int, int]]) -> dict[tuple, dict]:
+    """Pixels grouped by the frames that show them, once each frame is shifted back by
+    its offset: {(frame mask, offset): pixels}. A group with too few pixels to pay for
+    its own <use> is folded into its frames' own layers."""
+    n = len(frames)
+    masks: dict[tuple, int] = {}
+    for i, f in enumerate(frames):
+        dx, dy = offs[i]
+        for (x, y), col in f.items():
+            k = ((x - dx, y - dy), col)
+            masks[k] = masks.get(k, 0) | 1 << i
+    groups: dict[int, dict] = {}
+    for (p, col), mask in masks.items():
+        groups.setdefault(mask, {})[p] = col
+    full = (1 << n) - 1
+    for mask in [m for m in groups if m != full and m.bit_count() > 1]:
+        if len(groups[mask]) * (mask.bit_count() - 1) <= LAYER_MIN:
+            for i in range(n):
+                if mask >> i & 1:
+                    groups.setdefault(1 << i, {}).update(groups[mask])
+            del groups[mask]
+    # one <use> per offset among a group's frames
+    out: dict[tuple, dict] = {}
+    for mask, px in groups.items():
+        by: dict[tuple, int] = {}
+        for i in range(n):
+            if mask >> i & 1:
+                by[offs[i]] = by.get(offs[i], 0) | 1 << i
+        for o, sub in by.items():
+            out[(sub, o)] = {**out[(sub, o)], **px} if (sub, o) in out else px
+    return out
+
+
+def _cost(groups: dict[tuple, dict]) -> int:
+    """Rough characters: pixels drawn once per distinct layer, plus a <use> each."""
+    seen = {id(px): len(px) for px in groups.values()}
+    return 6 * sum(seen.values()) + 40 * len(groups)
 
 
 def cls_timing(cls: str, delay: float) -> tuple[float, float]:

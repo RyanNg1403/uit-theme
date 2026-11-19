@@ -690,7 +690,7 @@ def ceiling_fan(m: Motion, cx: int, y: int, r: int, blade: str, back: str, rod: 
 def ink_doodle(m: Motion, pts: list[tuple[int, int]], color: str, start: float, write: float, cycle: float) -> None:
     """Marker strokes appear in order over `write` seconds from `start`, stay, then fade."""
     name = m._name("ink")
-    m.s.style(f"@keyframes {name}{{0%{{opacity:0}}1%,70%{{opacity:1}}76%,100%{{opacity:0}}}}")
+    m.s.style(f".{name}{{opacity:0;animation:{name} {cycle}s linear infinite}}@keyframes {name}{{0%{{opacity:0}}1%,70%{{opacity:1}}76%,100%{{opacity:0}}}}")
     by: dict[int, list] = {}
     for i, p in enumerate(pts):
         by.setdefault(i * 12 // max(1, len(pts)) if len(pts) < 12 else i // max(1, len(pts) // 40), []).append(p)
@@ -700,7 +700,7 @@ def ink_doodle(m: Motion, pts: list[tuple[int, int]], color: str, start: float, 
         for x, y in by[k]:
             c.set(x, y, color)
         t = start + write * j / len(keys)
-        m.add(f'<g style="opacity:0;animation:{name} {cycle}s linear infinite;animation-delay:{round(t - cycle, 2)}s">{c.svg()}</g>')
+        m.add(f'<g class="{name}" style="animation-delay:{round(t - cycle, 2)}s">{c.svg()}</g>')
 
 
 def teachers() -> int:
