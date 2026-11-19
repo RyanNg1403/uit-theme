@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from people import Cast, bicycle, idle, pedal, ride, scooter, seat_feet  # noqa: E402
 from pixkit import Canvas, Motion, mix  # noqa: E402
 from rig import Look, Pose, walk  # noqa: E402
+from scenekit import check_size, new_palette, prune, tidy  # noqa: E402
 
 VG = '<rect width="384" height="216" fill="url(#vg)"/>'
 SKIN = ["#e0a982", "#d39a74", "#c88a66", "#ecb894"]
@@ -70,13 +71,14 @@ def drop(svg: str, cls: str) -> str:
 def splice(svg: str, layer: Layer, before: str = "</g>" + VG) -> str:
     """CSS into <style>, defs into <defs>, the body before `before` (by default the end
     of the pixel group, so it draws on top of the scene and under the vignette)."""
-    svg = svg.replace("</style>", "".join(layer.css) + "</style>", 1)
-    svg = svg.replace("</defs>", "".join(layer.defs) + "</defs>", 1)
+    svg = svg.replace("</style>", tidy("".join(layer.css)) + "</style>", 1)
+    svg = svg.replace("</defs>", tidy("".join(prune(layer.defs, *layer.body))) + "</defs>", 1)
     i = svg.index(before)
-    return svg[:i] + "".join(layer.body) + svg[i:]
+    return svg[:i] + tidy("".join(layer.body)) + svg[i:]
 
 
 def write(name: str, header: str, svg: str) -> int:
+    check_size(name, svg)
     os.makedirs("drafts/out", exist_ok=True)
     with open(f"drafts/out/{name}.svg", "w") as f:
         f.write(svg)
@@ -86,6 +88,7 @@ def write(name: str, header: str, svg: str) -> int:
 
 
 def base(name: str) -> str:
+    new_palette()
     with open(f"tools/base/{name}.svg") as f:
         return f.read()
 
