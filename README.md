@@ -55,6 +55,13 @@ uv run python tools/retrofit.py [scene ...]       # dawn, trungthu, monsoon, tet
 - `tools/build_scenes.py`: the four scenes drawn entirely in code.
 - `tools/retrofit.py`: swaps the stick-figure people in the older scenes for rig characters. The original SVGs are kept in `tools/base/`.
 
+The demo GIF at the top is a scripted mock of the Code tab, recorded headless (needs ffmpeg):
+
+```bash
+node --experimental-strip-types tools/build_demo.mjs
+uv run --with playwright python tools/record_demo.py
+```
+
 `navy`, `metro` and `silicon` came from earlier generators that are not in this repository.
 
 All artwork is original; no university logo is used. MIT licensed.
