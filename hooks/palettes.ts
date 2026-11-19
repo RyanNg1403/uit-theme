@@ -119,3 +119,55 @@ export const DAWN = {
     git: { added: '#2d8a4e', removed: '#c0392b', modified: '#a86f14', merged: '#6d4f94' },
   },
 } as const
+
+// Job fair day: deep cobalt under the blue-and-white tents.
+export const JOBFAIR = palette(
+  'UIT Job Fair',
+  'uit-jobfair',
+  { accent: '#4a8cff', danger: '#ef5d5a', success: '#4cc37a', warning: '#f2c44a', pro: '#9a86f2' },
+  ['#030c2c', '#061338', '#0a1a44', '#0f2150'],
+  ['#eaf0fb', '#c3cfe6', '#94a6c8'],
+  { added: '#5ad08a', removed: '#f07a6a', modified: '#f2c44a', merged: '#b3a3f7' },
+)
+
+// After school: dusk indigo, the sunset as accent.
+export const AFTERSCHOOL = palette(
+  'UIT After School',
+  'uit-afterschool',
+  { accent: '#ec8466', danger: '#ef4f6a', success: '#4cc38a', warning: '#f2c45a', pro: '#a98cf2' },
+  ['#0d0b26', '#130f31', '#19143b', '#201946'],
+  ['#f1eefb', '#cfc9e8', '#a09ac4'],
+  { added: '#5fd39a', removed: '#f2708a', modified: '#f2c45a', merged: '#c0a6f6' },
+)
+
+// Teachers' Day: plum evening, rose as accent.
+export const TEACHERS = palette(
+  "UIT Teachers' Day",
+  'uit-teachers',
+  { accent: '#ec6a86', danger: '#f0505a', success: '#4cc37a', warning: '#f2be4a', pro: '#b58af0' },
+  ['#140a16', '#1c0e1f', '#241228', '#2d1732'],
+  ['#fbeef3', '#e2cdd8', '#b89aab'],
+  { added: '#62d07e', removed: '#f4708a', modified: '#f2be4a', merged: '#d0a6f4' },
+)
+
+// Graduation day, light: morning sky with the gown navy as accent.
+export const GRADUATION = {
+  label: 'UIT Graduation Day',
+  id: 'uit-graduation',
+  only: 'light',
+  roles: { accent: '#2c4196', danger: '#c8402e', success: '#2f7a2a', warning: '#a8700f', pro: '#6d4fb0' },
+  light: {
+    gray: {
+      anchors: {
+        'surface-0': '#e4ecf4',
+        'surface-1': '#edf2f8',
+        'surface-2': '#f8fafd',
+        'surface-3': '#f8fafd',
+        'text-primary': '#16213a',
+        'text-secondary': '#34405a',
+        'text-muted': '#4f5a72',
+      },
+    },
+    git: { added: '#2d7a3e', removed: '#c0392b', modified: '#a86f14', merged: '#6d4f94' },
+  },
+} as const

@@ -16,8 +16,12 @@ Works in the Desktop and Mobile apps only for now; the terminal and VS Code draw
 | `/uit trungthu` | Mid-Autumn: full moon, star lanterns, a lion dance |
 | `/uit exam` | The library at 2 AM in exam season |
 | `/uit dawn` | Sunrise over the lake by the dorms (light theme) |
+| `/uit jobfair` | Job fair day: striped tents, balloons, Tower E |
+| `/uit afterschool` | Dusk on the main road, students heading home |
+| `/uit graduation` | Graduation morning: gowns, caps, confetti (light theme) |
+| `/uit teachers` | Teachers' Day (20/11): flowers for the lecturer |
 
-Also: `/uit still`, `/uit plain`, `/uit next`, `/uit off`, and `/uit-preview` for a local gallery (needs `python3`).
+Also: `/uit next`, `/uit off`, and `/uit-preview` for a local gallery (needs `python3`).
 
 ## Install
 
@@ -35,5 +39,22 @@ claude plugin install uit-theme --marketplace RyanNg1403/uit-theme
 ```
 
 Then send `/reload-plugins` in any desktop session that's already open.
+
+## Building the scenes
+
+The scenes in `hooks/scenes/` are generated; edit the Python in `tools/` and rebuild rather than editing the `.ts` files by hand. Needs [uv](https://docs.astral.sh/uv/).
+
+```bash
+uv run python tools/build_scenes.py [scene ...]   # jobfair, afterschool, graduation, teachers
+uv run python tools/retrofit.py [scene ...]       # dawn, trungthu, monsoon, tet, exam
+```
+
+- `tools/pixkit.py` and `tools/scenekit.py`: the pixel canvas, shared motions, and the encoder that writes each scene as stroked 1px rows in one SVG.
+- `tools/rig.py`: the character rig. A person is posed by joint angles (side, front or back view) and drawn with shading, an outline and optional props.
+- `tools/people.py`: walk cycles, idle and gesture loops, scooters and bicycles with riders. Each sprite is defined once in `<defs>` and reused with `<use>`.
+- `tools/build_scenes.py`: the four scenes drawn entirely in code.
+- `tools/retrofit.py`: swaps the stick-figure people in the older scenes for rig characters. The original SVGs are kept in `tools/base/`.
+
+`navy`, `metro` and `silicon` came from earlier generators that are not in this repository.
 
 All artwork is original; no university logo is used. MIT licensed.

@@ -1,14 +1,18 @@
-import type { EngineInterface as Engine, Register, ThemeColor, ThemeSetArgs } from 'claude-code'
+import type { EngineInterface as Engine, Register, ThemeSetArgs } from 'claude-code'
 
 import { makeColors } from './make-colors.js'
-import { DAWN, EXAM, METRO, MONSOON, NAVY, SILICON, TET, TRUNGTHU } from './palettes'
+import { AFTERSCHOOL, DAWN, EXAM, GRADUATION, JOBFAIR, METRO, MONSOON, NAVY, SILICON, TEACHERS, TET, TRUNGTHU } from './palettes'
 import { previewPage } from './preview'
+import { SCENE as AFTERSCHOOL_SCENE } from './scenes/afterschool'
 import { SCENE as DAWN_SCENE } from './scenes/dawn'
 import { SCENE as EXAM_SCENE } from './scenes/exam'
+import { SCENE as GRADUATION_SCENE } from './scenes/graduation'
+import { SCENE as JOBFAIR_SCENE } from './scenes/jobfair'
 import { SCENE as METRO_SCENE } from './scenes/metro'
 import { SCENE as MONSOON_SCENE } from './scenes/monsoon'
 import { SCENE as NAVY_SCENE } from './scenes/navy'
 import { SCENE as SILICON_SCENE } from './scenes/silicon'
+import { SCENE as TEACHERS_SCENE } from './scenes/teachers'
 import { SCENE as TET_SCENE } from './scenes/tet'
 import { SCENE as TRUNGTHU_SCENE } from './scenes/trungthu'
 
@@ -20,10 +24,8 @@ interface Theme {
   blurb: string
   palette: Palette
   scheme?: 'light' | 'dark'
-  /** Glass over an animated scene; absent for a still or plain look. */
-  scene?: { svg: string; alt: string; tint: string; opacity: number }
-  still?: string
-  gradient?: readonly [ThemeColor, ThemeColor]
+  /** The animated scene and the glass over it. */
+  scene: { svg: string; alt: string; tint: string; opacity: number }
 }
 
 const THEMES: readonly Theme[] = [
@@ -125,22 +127,57 @@ const THEMES: readonly Theme[] = [
     },
   },
   {
-    id: 'still',
-    title: 'Navy Still',
-    blurb: 'The navy campus as a still picture',
-    palette: NAVY,
-    still: 'assets/campus-night.png',
+    id: 'jobfair',
+    title: 'Job Fair',
+    blurb: 'Job fair day: striped tents, a balloon arch, Tower E catching the light',
+    palette: JOBFAIR,
+    scene: {
+      svg: JOBFAIR_SCENE,
+      alt: 'A pixel-art job fair on a university campus, with blue and white striped tents, a balloon arch, a crowd of students and a green glass tower',
+      tint: '#030c2c',
+      opacity: 0.72,
+    },
   },
   {
-    id: 'plain',
-    title: 'Navy Plain',
-    blurb: 'Navy colors on a plain gradient',
-    palette: NAVY,
-    gradient: ['#061636', '#04102a'],
+    id: 'afterschool',
+    title: 'After School',
+    blurb: 'Dusk on the main road: Tower E lights up, students ride home, stars come out',
+    palette: AFTERSCHOOL,
+    scene: {
+      svg: AFTERSCHOOL_SCENE,
+      alt: 'A pixel-art campus at dusk, with domed lecture halls, a lit glass tower, street lamps on a wet road and students heading home on motorbikes',
+      tint: '#0d0b26',
+      opacity: 0.72,
+    },
+  },
+  {
+    id: 'graduation',
+    title: 'Graduation Day',
+    blurb: 'Gowns and lime stoles on the lawn, caps in the air, confetti (light)',
+    palette: GRADUATION,
+    scheme: 'light',
+    scene: {
+      svg: GRADUATION_SCENE,
+      alt: 'A pixel-art graduation morning, with graduates in dark blue gowns and green stoles tossing caps, families with flowers, domed halls and a glass tower',
+      tint: '#eef4fa',
+      opacity: 0.7,
+    },
+  },
+  {
+    id: 'teachers',
+    title: "Teachers' Day",
+    blurb: '20/11 in a lecture room: flowers for the lecturer, fairy lights, Tower E outside',
+    palette: TEACHERS,
+    scene: {
+      svg: TEACHERS_SCENE,
+      alt: 'A pixel-art lecture room on Vietnamese Teachers\' Day, with students giving flowers to a lecturer in an ao dai, fairy lights, hearts on a whiteboard and a lit tower outside the window',
+      tint: '#140a16',
+      opacity: 0.74,
+    },
   },
 ]
 
-const ALIASES: Record<string, string> = { scene: 'navy', 'tet-bloom': 'tet', 'metro-dusk': 'metro', 'trung-thu': 'trungthu', 'mid-autumn': 'trungthu', 'exam-night': 'exam', 'campus-dawn': 'dawn' }
+const ALIASES: Record<string, string> = { scene: 'navy', 'tet-bloom': 'tet', 'metro-dusk': 'metro', 'trung-thu': 'trungthu', 'mid-autumn': 'trungthu', 'exam-night': 'exam', 'campus-dawn': 'dawn', 'job-fair': 'jobfair', 'after-school': 'afterschool', dusk: 'afterschool', grad: 'graduation', 'teachers-day': 'teachers', '20-11': 'teachers', '2011': 'teachers' }
 const STORE_KEY = 'theme'
 const LEGACY_KEY = 'variant'
 const PLUGIN = 'uit-theme'
@@ -153,24 +190,17 @@ const findTheme = (word: string) => THEMES.find(theme => theme.id === (ALIASES[w
 const lookFor = (theme: Theme): ThemeSetArgs => {
   const base = { colors: COLORS.get(theme.id)!.theme, overrideColorScheme: theme.scheme ?? 'dark' } as const
 
-  if (theme.scene) {
-    return {
-      ...base,
-      backdrop: { scene: sceneName(theme), glass: { blur: 14, tint: theme.scene.tint, opacity: theme.scene.opacity } },
-    }
+  return {
+    ...base,
+    backdrop: { scene: sceneName(theme), glass: { blur: 14, tint: theme.scene.tint, opacity: theme.scene.opacity } },
   }
-  if (theme.still) {
-    return { ...base, backdrop: { image: { source: theme.still } } }
-  }
-
-  return { ...base, backdrop: { gradient: { stops: [...theme.gradient!], angle: 180 } } }
 }
 
 const listing = (current: string) =>
-  THEMES.map(theme => `${theme.id === current ? '>' : ' '} ${theme.id.padEnd(9)} ${theme.title}: ${theme.blurb}`).join('\n')
+  THEMES.map(theme => `${theme.id === current ? '>' : ' '} ${theme.id.padEnd(12)} ${theme.title}: ${theme.blurb}`).join('\n')
 
 const USAGE = [
-  '/uit <theme>       switch theme (navy, monsoon, metro, silicon, tet, trungthu, exam, dawn, still, plain)',
+  '/uit <theme>       switch theme (navy, monsoon, metro, silicon, tet, trungthu, exam, dawn, jobfair, afterschool, graduation, teachers)',
   '/uit next          cycle to the next theme',
   '/uit list          list themes',
   '/uit off           back to the default look',
@@ -194,34 +224,21 @@ async function startPreview($: Engine, current: string): Promise<string> {
   }
   const dir = made.stdout.trim()
 
-  let stillUri = ''
-  try {
-    const { base64 } = await $.fs.read(`${$.plugin.root}/assets/campus-night.png`, { as: 'bytes' })
-    stillUri = `data:image/png;base64,${base64}`
-  } catch {
-    // The gallery shows the animated scenes without the still picture.
-  }
-
   for (const theme of THEMES) {
-    if (theme.scene) {
-      await $.fs.write(`${dir}/${theme.id}.svg`, theme.scene.svg)
-    }
+    await $.fs.write(`${dir}/${theme.id}.svg`, theme.scene.svg)
   }
   await $.fs.write(
     `${dir}/index.html`,
     previewPage({
       current,
-      stillUri,
       themes: THEMES.map(theme => ({
         id: theme.id,
         title: theme.title,
         blurb: theme.blurb,
         anchors: (theme.palette.dark ?? theme.palette.light)!.gray!.anchors as Record<string, string>,
         roles: theme.palette.roles as Record<string, string>,
-        tint: theme.scene?.tint ?? '#04102a',
-        opacity: theme.scene?.opacity ?? 0.72,
-        kind: theme.scene ? 'scene' : theme.still ? 'still' : 'plain',
-        gradient: theme.gradient ? [...theme.gradient] : undefined,
+        tint: theme.scene.tint,
+        opacity: theme.scene.opacity,
       })),
     }),
   )
@@ -274,7 +291,7 @@ export const register: Register = on => {
       }
     }
 
-    await $.command.register({ name: 'uit', description: 'UIT themes: /uit <navy|monsoon|metro|silicon|tet|trungthu|exam|dawn|still|plain>, next, list, off' })
+    await $.command.register({ name: 'uit', description: 'UIT themes: /uit <navy|monsoon|metro|silicon|tet|trungthu|exam|dawn|jobfair|afterschool|graduation|teachers>, next, list, off' })
     await $.command.register({ name: 'uit-preview', description: 'Open a localhost gallery of the UIT theme scenes (/uit-preview stop ends it)' })
 
     const current = await currentId($)
@@ -329,8 +346,8 @@ export const register: Register = on => {
     if (e.surface !== 'desktop' && e.surface !== 'mobile') {
       return next(e)
     }
-    const theme = e.props.plugin === PLUGIN ? THEMES.find(t => t.scene && sceneName(t) === e.props.scene) : undefined
-    if (!theme?.scene) {
+    const theme = e.props.plugin === PLUGIN ? THEMES.find(t => sceneName(t) === e.props.scene) : undefined
+    if (!theme) {
       return next(e)
     }
 
@@ -345,7 +362,7 @@ async function currentId($: Engine): Promise<string> {
   if (stored === 'off' || (typeof stored === 'string' && findTheme(stored))) {
     return stored === 'off' ? 'off' : findTheme(stored)!.id
   }
-  // Earlier versions kept scene | still | plain | off under 'variant'.
+  // Earlier versions kept scene | still | plain | off under 'variant'; still and plain are gone and fall back to navy.
   const legacy = await $.store.get(LEGACY_KEY)
   if (legacy === 'off') {
     return 'off'
